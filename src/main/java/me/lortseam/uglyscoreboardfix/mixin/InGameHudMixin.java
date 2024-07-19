@@ -6,7 +6,6 @@ import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.hud.DebugHud;
 import net.minecraft.client.gui.hud.InGameHud;
-import net.minecraft.scoreboard.ScoreboardEntry;
 import net.minecraft.scoreboard.ScoreboardObjective;
 import net.minecraft.scoreboard.number.BlankNumberFormat;
 import net.minecraft.scoreboard.number.NumberFormat;
@@ -18,28 +17,18 @@ import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.*;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import java.util.Arrays;
-
 @Mixin(InGameHud.class)
 public abstract class InGameHudMixin {
 
-    @Unique
-    private int oldScaledWidth;
-    @Unique
-    private int oldScaledHeight;
     @Unique
     private int xShift;
 
     @Final
     @Shadow
     private DebugHud debugHud;
-    @Shadow
-    private int scaledWidth;
-    @Shadow
-    private int scaledHeight;
 
-    @Inject(method = "renderScoreboardSidebar", at = @At("HEAD"), cancellable = true)
-    private void uglyscoreboardfix$hideOrScale(DrawContext context, ScoreboardObjective objective, CallbackInfo ci) {
+    @Inject(method = "renderScoreboardSidebar(Lnet/minecraft/client/gui/DrawContext;Lnet/minecraft/scoreboard/ScoreboardObjective;)V", at = @At("HEAD"), cancellable = true)
+    private void uglyscoreboardfix$hide(DrawContext context, ScoreboardObjective objective, CallbackInfo ci) {
         if ((UglyScoreboardFix.getConfig().isHideSidebar()) || (UglyScoreboardFix.getConfig().isHideOnDebug() && debugHud.shouldShowDebugHud())) {
             ci.cancel();
             return;
@@ -47,33 +36,26 @@ public abstract class InGameHudMixin {
         context.getMatrices().push();
         float scale = UglyScoreboardFix.getConfig().getScale();
         context.getMatrices().scale(scale, scale, scale);
-        scaledWidth = (int) ((oldScaledWidth = scaledWidth) / scale);
-        scaledHeight = (int) ((oldScaledHeight = scaledHeight) / scale);
     }
 
-    @Inject(method = "renderScoreboardSidebar", at = @At("TAIL"))
+    @Inject(method = "renderScoreboardSidebar(Lnet/minecraft/client/gui/DrawContext;Lnet/minecraft/scoreboard/ScoreboardObjective;)V", at = @At("TAIL"))
     private void uglyscoreboardfix$pop(DrawContext context, ScoreboardObjective objective, CallbackInfo ci) {
         context.getMatrices().pop();
-        scaledWidth = oldScaledWidth;
-        scaledHeight = oldScaledHeight;
     }
 
-    @Unique
-    private static boolean uglyscoreboardfix$scoresAreConsecutive(ScoreboardObjective objective) {
-        long previ = Long.MIN_VALUE;  // Long, so that no score (Int) can match Long.MIN_VALUE
-        int[] arr = objective.getScoreboard().getScoreboardEntries(objective).stream().mapToInt(ScoreboardEntry::value).limit(UglyScoreboardFix.getConfig().getMaxLineCount()).sorted().toArray();
-        System.out.println(Arrays.toString(arr));
-        for (int i : arr) {
-            if (previ != Long.MIN_VALUE && i != previ + 1)
-                return false;
-            previ = i;
-        }
-        return objective.getScoreboard().getScoreboardEntries(objective).size() > 1;
+    @Redirect(method = "method_55440", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/DrawContext;getScaledWindowWidth()I"))
+    private int uglyscoreboardfix$scaleWidth(DrawContext context) {
+        return (int) (context.getScaledWindowWidth() / UglyScoreboardFix.getConfig().getScale());
     }
 
-    @ModifyVariable(method = "renderScoreboardSidebar", at = @At(value = "STORE"))
+    @Redirect(method = "method_55440", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/DrawContext;getScaledWindowHeight()I"))
+    private int uglyscoreboardfix$scaleHeight(DrawContext context) {
+        return (int) (context.getScaledWindowHeight() / UglyScoreboardFix.getConfig().getScale());
+    }
+
+    @ModifyVariable(method = "renderScoreboardSidebar(Lnet/minecraft/client/gui/DrawContext;Lnet/minecraft/scoreboard/ScoreboardObjective;)V", at = @At(value = "STORE"))
     private NumberFormat uglyscoreboardfix$modifyNumberFormat(NumberFormat numberFormat, DrawContext context, ScoreboardObjective objective) {
-        if (UglyScoreboardFix.getConfig().getHideScores() == ModConfig.HideScores.Yes || (UglyScoreboardFix.getConfig().getHideScores() == ModConfig.HideScores.Auto && uglyscoreboardfix$scoresAreConsecutive(objective)))
+        if (UglyScoreboardFix.getConfig().getHideScores() == ModConfig.HideScores.Yes || (UglyScoreboardFix.getConfig().getHideScores() == ModConfig.HideScores.Auto && ModConfig.scoresAreConsecutive(objective)))
             return BlankNumberFormat.INSTANCE;
         else
             return numberFormat;
@@ -138,7 +120,7 @@ public abstract class InGameHudMixin {
         return context.drawText(textRenderer, text, x, y, color, shadow);
     }
 
-    @ModifyConstant(method = "renderScoreboardSidebar", constant = @Constant(longValue = 15L))
+    @ModifyConstant(method = "renderScoreboardSidebar(Lnet/minecraft/client/gui/DrawContext;Lnet/minecraft/scoreboard/ScoreboardObjective;)V", constant = @Constant(longValue = 15L))
     private long uglyscoreboardfix$modifyMaxLineCount(long maxSize) {
         return UglyScoreboardFix.getConfig().getMaxLineCount();
     }

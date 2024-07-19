@@ -17,11 +17,12 @@ public class UglyScoreboardFix implements ClientModInitializer {
     public static final String MODID = "uglyscoreboardfix";
 
     @Getter
-    private static final ModConfig config = ModConfig.HANDLER.instance();
+    private static ModConfig config = null;
 
     @Override
     public void onInitializeClient() {
         ModConfig.HANDLER.load();
+        config = ModConfig.HANDLER.instance();
 
         KeyBinding sidebarKeybinding = KeyBindingHelper.registerKeyBinding(new KeyBinding("Toggle Sidebar Visibility", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_UNKNOWN, "Ugly Scoreboard Fix"));
         ClientTickEvents.END_CLIENT_TICK.register((client) -> {
