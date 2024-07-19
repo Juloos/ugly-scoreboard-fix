@@ -253,7 +253,7 @@ public class ModConfig {
                                         .build())
                                 .option(Option.<Color>createBuilder()
                                         .name(Text.literal("Scores color"))
-                                        .description(OptionDescription.of(Text.literal("Color of the scores.\n\nDefault is #FF0000.")))
+                                        .description(OptionDescription.of(Text.literal("Color of the scores.\n\nDefault is #FF5555.")))
                                         .binding(
                                                 scoreForegroundColor,
                                                 this::getScoreForegroundColor,

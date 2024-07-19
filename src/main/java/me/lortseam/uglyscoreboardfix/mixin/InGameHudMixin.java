@@ -92,30 +92,36 @@ public abstract class InGameHudMixin {
     private int uglyscoreboardfix$drawHeadingText(DrawContext context, TextRenderer textRenderer, Text text, int x, int y, int color, boolean shadow) {
         if (UglyScoreboardFix.getConfig().isHideTitle())
             return 0;
+        color = UglyScoreboardFix.getConfig().getHeadingForegroundColor().getRGB();
+        if (UglyScoreboardFix.getConfig().isForceHeadingForegroundColor())
+            text = text.copy().withColor(color);
         if (UglyScoreboardFix.getConfig().getHorizontalPosition() == ModConfig.HorizontalPosition.Left)
             x -= xShift;
         y += UglyScoreboardFix.getConfig().getYOffset();
-        color = UglyScoreboardFix.getConfig().getHeadingForegroundColor().getRGB();
         shadow = UglyScoreboardFix.getConfig().isHeadingShadow();
         return context.drawText(textRenderer, text, x, y, color, shadow);
     }
 
     @Redirect(method = "method_55440", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/DrawContext;drawText(Lnet/minecraft/client/font/TextRenderer;Lnet/minecraft/text/Text;IIIZ)I", ordinal = 1))
     private int uglyscoreboardfix$drawText(DrawContext context, TextRenderer textRenderer, Text text, int x, int y, int color, boolean shadow) {
+        color = UglyScoreboardFix.getConfig().getForegroundColor().getRGB();
+        if (UglyScoreboardFix.getConfig().isForceForegroundColor())
+            text = text.copy().withColor(color);
         if (UglyScoreboardFix.getConfig().getHorizontalPosition() == ModConfig.HorizontalPosition.Left)
             x -= xShift;
         y += UglyScoreboardFix.getConfig().getYOffset();
-        color = UglyScoreboardFix.getConfig().getForegroundColor().getRGB();
         shadow = UglyScoreboardFix.getConfig().isShadow();
         return context.drawText(textRenderer, text, x, y, color, shadow);
     }
 
     @Redirect(method = "method_55440", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/DrawContext;drawText(Lnet/minecraft/client/font/TextRenderer;Lnet/minecraft/text/Text;IIIZ)I", ordinal = 2))
     private int uglyscoreboardfix$drawScoreText(DrawContext context, TextRenderer textRenderer, Text text, int x, int y, int color, boolean shadow) {
+        color = UglyScoreboardFix.getConfig().getScoreForegroundColor().getRGB();
+        if (UglyScoreboardFix.getConfig().isForceScoreForegroundColor())
+            text = text.copy().withColor(color);
         if (UglyScoreboardFix.getConfig().getHorizontalPosition() == ModConfig.HorizontalPosition.Left)
             x -= xShift;
         y += UglyScoreboardFix.getConfig().getYOffset();
-        color = UglyScoreboardFix.getConfig().getScoreForegroundColor().getRGB();
         shadow = UglyScoreboardFix.getConfig().isScoreShadow();
         return context.drawText(textRenderer, text, x, y, color, shadow);
     }
